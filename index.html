@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>canvas#myCanvas {
+  background-color: lightGreen;
+  border: 3px solid gray;
+}</style>
+</head>
+<body>
+    <!-- declare the canvas element and give it fallback content -->
+<canvas id="myCanvas" width="500vw" height="400vh">Your browser does not support JS Canvas</canvas>
+
+<button type="button" onclick="playGame()">Play Game!</button>
+    <script>// cache the canvas
+const canvas = document.getElementById("myCanvas");
+// initialize the context
+let ctx = canvas.getContext("2d");
+
+const CW = canvas.width;
+const CH = canvas.height;
+const halfCW = CW / 2;
+const halfCH = CH / 2;
+
+let ballX = halfCW;
+let ballY = halfCH;
+let ballW = 30;
+let ballH = 30;
+let bounces = 0;
+let falls = 0;
+let goals = 0;
+
+let ballIconSrc = "https://cdn-icons-png.flaticon.com/512/53/53283.png";
+let ballImage = new Image();
+ballImage.crossOrigin = "anonymous";
+ballImage.src = ballIconSrc;
+
+let netIconSrc =
+  "https://png.pngtree.com/png-vector/20220719/ourmid/pngtree-color-icon---football-goal-post-game-icon-penalty-vector-png-image_37947066.png";
+let netImage = new Image();
+netImage.crossOrigin = "anonymous";
+netImage.src = netIconSrc;
+
+function drawRect(x, y, w, h) {
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "darkblue";
+}
+function drawBall() {
+  ctx.drawImage(ballImage, ballX, ballY, ballW, ballH);
+}
+drawBall();
+
+let paddleW = 100;
+let paddleH = 20;
+let paddleX = halfCW - paddleW / 2;
+let paddleY = CH - paddleH;
+
+function drawPaddle() {
+  drawRect(paddleX, paddleY, paddleW, paddleH);
+}
+drawPaddle();
+
+let netW = 120;
+let netH = 30;
+let netX = CW / 2 - netW / 2;
+let netY = CH / 2 - 200;
+function drawNet() {
+  ctx.drawImage(netImage, netX, netY, netW, netH);
+}
+drawNet();
+function netCollision() {
+  if (
+    ballX < netX + netW &&
+    ballX + ballW > netX &&
+    ballY < netY + netH &&
+    ballY + ballH > netY
+  ) {
+    return true;
+  }
+}
+
+let ballSpeedY = 5;
+let ballSpeedX = 5;
+function paddleCollision() {
+  if (
+    ballX < paddleX + paddleW &&
+    ballX + ballW > paddleX &&
+    ballY < paddleY + paddleH &&
+    ballY + ballH > paddleY
+  ) {
+    return true;
+  }
+}
+
+// event listener
+let moveRight = false;
+let moveLeft = false;
+document.addEventListener("keydown", function (event) {
+  if (event.key === "ArrowRight") {
+    //paddleX += 10;
+    moveRight = true;
+  }
+  if (event.key === "ArrowLeft") {
+    //paddleX -= 10;
+    moveLeft = true;
+  }
+});
+document.addEventListener("keyup", function (event) {
+  if (event.key === "ArrowRight") {
+    //paddleX += 10;
+    moveRight = false;
+  }
+  if (event.key === "ArrowLeft") {
+    //paddleX -= 10;
+    moveLeft = false;
+  }
+});
+
+function playGame() {
+  // console.log("I'm playing");
+
+  ballX += ballSpeedX;
+  ballY += ballSpeedY;
+  // console.log(ballX);
+  // canvas to be cleared
+  ctx.clearRect(0, 0, CW, CH);
+  if (ballX + ballW > CW || ballX + ballW < 30) {
+    ballSpeedX *= -1;
+  }
+  if (ballY + ballH < 30) {
+    ballSpeedY *= -1;
+  }
+  if (ballY + ballH > CH) {
+    falls++;
+    ballX = halfCW;
+    ballY = halfCH;
+    //failText();
+    // ballX = CW / 2;
+    // ballY = CH / 2;
+  }
+  if (paddleCollision()) {
+    //console.log("hello");
+    //ballSpeedX *= -1;
+    ballSpeedY *= -1;
+    bounces++;
+    console.log("bounces:" + bounces);
+  }
+
+  if (netCollision()) {
+    //console.log("hello");
+    ballSpeedX *= -1;
+    ballSpeedY *= -1;
+    goals++;
+    console.log("goals:" + goals);
+    ballSpeedY += 1;
+  }
+  if (moveRight && paddleX + paddleW < CW) {
+    paddleX += 10;
+  }
+  if (moveLeft && paddleX > 0) {
+    paddleX -= 10;
+  }
+  if (falls === 10) {
+    failText();
+    ballSpeedX = 0;
+    ballSpeedY = 0;
+    ballX = halfCW;
+    ballY = halfCH;
+  }
+
+  // draw the ball
+  drawBall();
+  drawPaddle();
+  drawNet();
+  // recursively call the playGame function
+  requestAnimationFrame(playGame);
+  drawHUD();
+}
+
+function drawHUD() {
+  ctx.font = "14px Arial";
+  ctx.fillText(
+    "Bounces: " + bounces + " Falls: " + falls + " Goals: " + goals,
+    5,
+    20
+  );
+  //ctx.fillText("string", x, y)
+}
+drawHUD();
+
+function failText() {
+  ctx.font = "30px Arial";
+  ctx.fillText("Game Over", CW / 2 - 80, CH / 2);
+}</script>
+</body>
+</html>
